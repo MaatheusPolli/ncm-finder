@@ -10,10 +10,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import pg from "pg";
-import { construirNcms, criarEmbeddingProvider, embedNcms, parseTabelaNcm, PgVectorStore } from "../packages/core/src/index.js";
+import { carregarEnv, construirNcms, criarEmbeddingProvider, embedNcms, parseTabelaNcm, PgVectorStore } from "../packages/core/src/index.js";
 
 const URL_SISCOMEX = "https://portalunico.siscomex.gov.br/classif/api/publico/nomenclatura/download/json";
 const DIR = join(import.meta.dirname, "..", "data", "ncm");
+carregarEnv(join(import.meta.dirname, "..", ".env"));
 
 const { values } = parseArgs({
   options: {

@@ -1,5 +1,5 @@
 /**
- * pnpm eval [--regressao] [--sem-llm]
+ * pnpm eval [--regressao] [--sem-llm] [--hibrido-llm]
  *
  * Compara BM25, busca vetorial e vetorial + LLM no dataset rotulado e grava report/eval.md + report/eval-chart.svg.
  *
@@ -16,32 +16,47 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
   avaliar,
+  avaliarComLlm,
+  CacheRespostasLlm,
+  gerarCsvEvidencias,
+  gerarMetadados,
+  type RespostaLlm,
+  type ResultadoAvaliacaoLlm,
+  carregarEnv,
   Bm25Baseline,
-  ClaudeReranker,
   criarEmbeddingProvider,
   criarReranker,
+  descreverReranker,
+  NoopReranker,
+  ClaudeCliReranker,
   desserializarEmbeddings,
-  fundirRrf,
+  fundirCandidatos,
+  PROFUNDIDADE_FUSAO,
   gerarGraficoSvg,
   gerarRelatorio,
   MemoryVectorStore,
   normalizarDescricao,
   parseDataset,
-  reordenar,
   serializarEmbeddings,
   subconjuntoRegressao,
+  type Candidato,
   type EmbeddingProvider,
   type Ncm,
   type ResultadoSistema,
 } from "../packages/core/src/index.js";
 
 const RAIZ = join(import.meta.dirname, "..");
+carregarEnv(join(RAIZ, ".env"));
 const K = 10;
 const ARQUIVO_DATASET = "data/eval/produtos-rotulados.csv";
 const ARQUIVO_LIMIARES = "data/eval/limiares.json";
 
 const { values: flags } = parseArgs({
-  options: { regressao: { type: "boolean", default: false }, "sem-llm": { type: "boolean", default: false } },
+  options: {
+    regressao: { type: "boolean", default: false },
+    "sem-llm": { type: "boolean", default: false },
+    "hibrido-llm": { type: "boolean", default: false },
+  },
 });
 
 // ---------- dados ----------
@@ -73,7 +88,9 @@ async function carregarOuGerar(arquivo: string, itens: { chave: string; texto: s
     const lido = desserializarEmbeddings(new Uint8Array(await readFile(caminho)));
     lido.codigos.forEach((c, i) => cache.set(c, lido.vetores[i]!));
   }
-  const pendentes = itens.filter((i) => !cache.has(i.chave));
+  // Ordenados por tamanho: cada lote é processado no comprimento do texto mais longo (padding), e o custo
+  // da atenção cresce com o quadrado dele. Agrupar textos de tamanho parecido corta o tempo dos modelos grandes.
+  const pendentes = itens.filter((i) => !cache.has(i.chave)).sort((a, b) => a.texto.length - b.texto.length);
   if (pendentes.length) {
     console.log(`Gerando ${pendentes.length} embeddings (${tipo}) com ${provedor.modelo}...`);
     for (let i = 0; i < pendentes.length; i += 64) {
@@ -101,51 +118,80 @@ const embConsulta = await carregarOuGerar(
 
 const store = new MemoryVectorStore();
 await store.upsert(provider.modelo, tabela.ncms.map((ncm) => ({ ncm, embedding: embNcm.get(ncm.codigo)! })));
-const buscarVetorial = (descricao: string) => store.buscar(provider.modelo, embConsulta.get(chaveConsulta(descricao))!, K);
+const buscarVetorial = (descricao: string, k = K) => store.buscar(provider.modelo, embConsulta.get(chaveConsulta(descricao))!, k);
 
 // ---------- sistemas ----------
 const bm25 = new Bm25Baseline(tabela.ncms);
+const lexica = bm25.comoBuscaLexica();
 const resultados: ResultadoSistema[] = [];
 const naoExecutados: { nome: string; motivo: string }[] = [];
 
 resultados.push(await avaliar("BM25", async (d) => bm25.buscar(normalizarDescricao({ descricao: d }), K), produtos));
 resultados.push(await avaliar("Vetorial", async (d) => (await buscarVetorial(d)).map((c) => c.ncm.codigo), produtos));
-// Híbrido: RRF sobre os top-50 de cada método (profundidade maior que k para a fusão ter material).
-resultados.push(
-  await avaliar(
-    "Híbrido (RRF)",
-    async (d) => {
-      const vetorial = (await store.buscar(provider.modelo, embConsulta.get(chaveConsulta(d))!, 50)).map((c) => c.ncm.codigo);
-      return fundirRrf([bm25.buscar(normalizarDescricao({ descricao: d }), 50), vetorial], K);
-    },
-    produtos,
-  ),
-);
+// Híbrido: mesma função e parâmetros do pipeline de produção (fundirCandidatos, PROFUNDIDADE_FUSAO, C_RRF).
+async function buscarHibrido(d: string, k = K): Promise<Candidato[]> {
+  const texto = normalizarDescricao({ descricao: d });
+  return fundirCandidatos(await buscarVetorial(d, PROFUNDIDADE_FUSAO), lexica.buscar(texto, PROFUNDIDADE_FUSAO), k);
+}
+resultados.push(await avaliar("Híbrido (RRF)", async (d) => (await buscarHibrido(d)).map((c) => c.ncm.codigo), produtos));
+
+// Candidatos enviados ao LLM: mais que o k exibido sobe o teto do rerank (o LLM só escolhe entre o que recebe).
+const K_LLM = Number(process.env.K_LLM ?? K);
 
 const reranker = criarReranker();
+const modeloLlm = descreverReranker(reranker);
+const notasLlm: string[] = [];
+const respostasLlm: Record<string, RespostaLlm[]> = {};
+const contagensLlm: Record<string, ResultadoAvaliacaoLlm["contagem"]> = {};
 let exemploJustificativa: { produto: string; ncm: string; justificativa: string } | undefined;
+
+// Cache em disco (união a cada gravação, seguro com execuções simultâneas): retoma após limite de cota
+// e permite regerar o relatório sem chamar o modelo. Ver CacheRespostasLlm.
+const cacheLlm = await CacheRespostasLlm.abrir(join(RAIZ, "data/eval/cache-llm", `${modeloLlm.replace(/[^a-z0-9.-]+/gi, "_")}.json`));
+
+/** Devolve false quando a cota acabou: o sistema não entra no relatório (números parciais distorceriam a média). */
+async function rodarComLlm(nome: string, candidatosDe: (d: string) => Promise<Candidato[]>): Promise<boolean> {
+  console.log(`${nome} (${modeloLlm})...`);
+  const r = await avaliarComLlm({
+    nome,
+    modelo: modeloLlm,
+    reranker,
+    produtos,
+    candidatosDe,
+    cache: cacheLlm,
+    concorrencia: Number(process.env.LLM_CONCORRENCIA ?? 4),
+    intervaloMs: process.env.LLM_RPM ? 60_000 / Number(process.env.LLM_RPM) : 0,
+    aoProgredir: (f, t) => process.stdout.write(`\r  ${f}/${t}`),
+    aoErro: (m) => console.error(`\n  erro de API: ${m.slice(0, 160)}`),
+  });
+  process.stdout.write("\n");
+  respostasLlm[nome] = r.respostas;
+  contagensLlm[nome] = r.contagem;
+  const { doCache, novas, erros, semEscolha } = r.contagem;
+  if (!r.resultado) {
+    const feitos = doCache + novas;
+    console.error(`  erros seguidos: provável fim da cota. ${nome}: ${feitos}/${produtos.length} respondidos (${novas} nesta execução). Rode de novo quando a cota renovar.`);
+    naoExecutados.push({ nome, motivo: `interrompido por limite de cota do provedor (${feitos}/${produtos.length} produtos respondidos, salvos em data/eval/cache-llm/); rode \`pnpm eval\` novamente para continuar.` });
+    return false;
+  }
+  exemploJustificativa ??= r.respostas
+    .filter((x) => x.escolha?.ncm === x.esperado && x.escolha.confianca >= 0.7)
+    .map((x) => ({ produto: x.descricao, ncm: x.esperado, justificativa: x.escolha!.justificativa }))[0];
+  notasLlm.push(`${nome}: ${semEscolha} de ${produtos.length} produtos sem escolha válida do LLM (${erros} por erro de API); nesses, vale a ordem dos candidatos. ${doCache} respostas vieram do cache em disco (data/eval/cache-llm/) e ${novas} foram chamadas novas.`);
+  resultados.push(r.resultado);
+  return true;
+}
+
 if (flags.regressao || flags["sem-llm"]) {
   naoExecutados.push({ nome: "Vetorial + LLM", motivo: flags.regressao ? "modo regressão (sem custo de API)." : "execução com --sem-llm." });
-} else if (!(reranker instanceof ClaudeReranker)) {
-  naoExecutados.push({ nome: "Vetorial + LLM", motivo: "sem credencial da Anthropic no ambiente (defina ANTHROPIC_API_KEY e rode `pnpm eval`)." });
+} else if (reranker instanceof NoopReranker) {
+  naoExecutados.push({ nome: "Vetorial + LLM", motivo: "nenhum LLM configurado (defina ANTHROPIC_API_KEY, GEMINI_API_KEY ou RERANKER=claude-cli e rode `pnpm eval`)." });
 } else {
-  console.log(`Rerank com ${reranker.modelo}...`);
-  resultados.push(
-    await avaliar(
-      "Vetorial + LLM",
-      async (descricao) => {
-        const candidatos = await buscarVetorial(descricao);
-        const escolha = await reranker.escolher({ descricao }, candidatos);
-        if (escolha && escolha.ncm === todos.find((p) => p.descricao === descricao)?.ncm && !exemploJustificativa) {
-          exemploJustificativa = { produto: descricao, ncm: escolha.ncm, justificativa: escolha.justificativa };
-        }
-        return reordenar(candidatos, escolha).map((c) => c.ncm.codigo);
-      },
-      produtos,
-      { concorrencia: 4, aoProgredir: (f, t) => process.stdout.write(`\r  ${f}/${t}`) },
-    ),
-  );
-  process.stdout.write("\n");
+  const completo = await rodarComLlm("Vetorial + LLM", (d) => buscarVetorial(d, K_LLM));
+  // Sem cota para o primeiro sistema, não adianta começar o segundo.
+  if (flags["hibrido-llm"] && completo) {
+    await rodarComLlm("Híbrido + LLM", (d) => buscarHibrido(d, K_LLM));
+  }
 }
 
 for (const r of resultados) {
@@ -172,13 +218,15 @@ const md = gerarRelatorio({
     sha256: createHash("sha256").update(csv).digest("hex"),
   },
   modeloEmbedding: provider.modelo,
-  modeloLlm: reranker instanceof ClaudeReranker && !flags["sem-llm"] ? reranker.modelo : null,
+  modeloLlm: !(reranker instanceof NoopReranker) && !flags["sem-llm"] ? modeloLlm : null,
   k: K,
   resultados,
   naoExecutados,
   ...(exemploJustificativa ? { exemploJustificativa } : {}),
   notas: [
-    "Latência medida no processo de avaliação: BM25 e busca vetorial em memória, com o embedding da consulta pré-calculado. A latência do LLM inclui a chamada à API.",
+    `Candidatos enviados ao LLM por produto: k = ${K_LLM}. Nos sistemas com LLM, o top-10 conta os 10 primeiros do ranking final (escolha do LLM + candidatos restantes na ordem da busca).`,
+    ...notasLlm,
+    "Latência medida no processo de avaliação: BM25 e busca vetorial em memória, com o embedding da consulta pré-calculado. Nos sistemas com LLM, respostas vindas do cache em disco não incluem o tempo da chamada ao modelo.",
     "Embeddings quantizados em int8 (`data/embeddings/`) para versionamento. O erro de quantização é menor que 1% por componente.",
   ],
   descricaoPorCodigo: (c) => porCodigo.get(c)?.descricao ?? c,
@@ -187,3 +235,28 @@ await mkdir(join(RAIZ, "report"), { recursive: true });
 await writeFile(join(RAIZ, "report/eval.md"), md);
 await writeFile(join(RAIZ, "report/eval-chart.svg"), gerarGraficoSvg(resultados));
 console.log("Relatório: report/eval.md");
+
+// ---------- evidências ----------
+// Uma pasta por execução (data + modelo): previsões produto a produto e metadados, para auditar o relatório.
+const dataExecucao = new Date().toISOString().slice(0, 10);
+const shaDataset = createHash("sha256").update(csv).digest("hex").slice(0, 8);
+const dirEvidencias = join(RAIZ, "report/evidencias", `${dataExecucao}_${modeloLlm.replace(/[^a-z0-9.-]+/gi, "_")}_dataset-${shaDataset}`);
+await mkdir(dirEvidencias, { recursive: true });
+await writeFile(join(dirEvidencias, "predicoes.csv"), "﻿" + gerarCsvEvidencias(resultados, respostasLlm));
+await writeFile(
+  join(dirEvidencias, "execucao.json"),
+  gerarMetadados({
+    data: new Date().toISOString(),
+    comando: `pnpm eval ${process.argv.slice(2).join(" ")}`.trim(),
+    modeloEmbedding: provider.modelo,
+    modeloLlm: reranker instanceof NoopReranker ? null : modeloLlm,
+    ...(reranker instanceof ClaudeCliReranker && reranker.modeloEfetivo ? { modeloLlmEfetivo: reranker.modeloEfetivo } : {}),
+    kExibido: K,
+    kLlm: K_LLM,
+    datasetSha256: createHash("sha256").update(csv).digest("hex"),
+    tabelaNcm: `${tabela.ato} (${tabela.atualizacao})`,
+    contagens: contagensLlm,
+    metricas: Object.fromEntries(resultados.map((r) => [r.nome, { top1: r.metricas.top1, top5: r.metricas.top5, top10: r.metricas.top10, mrr: r.metricas.mrr }])),
+  }),
+);
+console.log(`Evidências: ${dirEvidencias.slice(RAIZ.length + 1)}/ (predicoes.csv, execucao.json)`);
