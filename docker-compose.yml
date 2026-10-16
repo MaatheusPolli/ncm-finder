@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ncm
+      POSTGRES_PASSWORD: ncm
+      POSTGRES_DB: ncm
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

@@ -1,0 +1,22 @@
+{
+  "name": "ncm-finder",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "ingest": "tsx scripts/ingest.ts",
+    "eval": "tsx scripts/eval.ts",
+    "eval:regressao": "tsx scripts/eval.ts --regressao"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.0",
+    "tsx": "^4.23.15"
+  },
+  "type": "module"
+}

@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ncm
+          POSTGRES_PASSWORD: ncm
+          POSTGRES_DB: ncm
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ncm" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Com DATABASE_URL, os testes de integração do pgvector rodam e entram na meta de cobertura.
+      DATABASE_URL: postgres://ncm:ncm@localhost:5432/ncm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # apps importam @ncm-finder/core pelo dist
+      - run: pnpm --filter @ncm-finder/core build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @ncm-finder/web build
+      # Regressão de acurácia: 50 produtos, embeddings versionados em data/embeddings (sem baixar modelo, sem API)
+      - name: Regressão de acurácia (top-5)
+        run: pnpm eval:regressao
+        env:
+          EMBEDDING_PROVIDER: local
+          LOCAL_EMBEDDING_MODEL: Xenova/bge-m3
+          RERANKER: noop

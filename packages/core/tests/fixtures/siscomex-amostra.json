@@ -1,0 +1,21 @@
+{
+  "Data_Ultima_Atualizacao_NCM": "Vigente em 23/09/2026",
+  "Ato": "Resolução Gecex nº 926/2026",
+  "Nomenclaturas": [
+    { "Codigo": "01", "Descricao": "Animais vivos.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "01.05", "Descricao": "Aves da espécie <i>Gallus domesticus</i>, patos, gansos, perus, vivos.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "0105.1", "Descricao": "- De peso não superior a 185 g:", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "0105.11", "Descricao": "-- Aves da espécie <i>Gallus domesticus</i>", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "0105.11.1", "Descricao": "De linhas puras ou híbridas, para reprodução", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "0105.11.10", "Descricao": "Machos", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "04", "Descricao": "Leite e laticínios; ovos de aves; mel natural.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "0409.00.00", "Descricao": "Mel natural.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "64", "Descricao": "Calçado, polainas e artigos semelhantes; suas partes.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "64.04", "Descricao": "Calçado com sola exterior de borracha, plástico, couro natural ou reconstituído e parte superior de matérias têxteis.", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "6404.1", "Descricao": "- Calçado com sola exterior de borracha ou de plástico:", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "6404.11.00", "Descricao": "-- Calçado para esporte; calçado para tênis, basquetebol, ginástica, treino e semelhantes", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "6404.19.00", "Descricao": "-- Outro", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/9999" },
+    { "Codigo": "6404.19.90", "Descricao": "-- Código expirado", "Data_Inicio": "01/04/2022", "Data_Fim": "31/12/2025" },
+    { "Codigo": "6404.20.00", "Descricao": "- Calçado futuro", "Data_Inicio": "01/01/2030", "Data_Fim": "31/12/9999" }
+  ]
+}
