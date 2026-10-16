@@ -1,5 +1,6 @@
 import bm25 from "wink-bm25-text-search";
 import type { Ncm } from "../domain/ncm.js";
+import type { BuscaLexica } from "../ports/busca-lexica.js";
 import { semAcentos } from "../pipeline/normalize.js";
 
 const STOPWORDS = new Set(
@@ -20,8 +21,10 @@ export function tokenizar(texto: string): string[] {
  */
 export class Bm25Baseline {
   private readonly motor = bm25();
+  private readonly porCodigo: Map<string, Ncm>;
 
   constructor(ncms: Ncm[]) {
+    this.porCodigo = new Map(ncms.map((n) => [n.codigo, n]));
     this.motor.defineConfig({ fldWeights: { descricao: 2, descricaoCompleta: 1 }, bm25Params: { k1: 1.2, b: 0.75 } });
     this.motor.definePrepTasks([tokenizar]);
     for (const n of ncms) this.motor.addDoc({ descricao: n.descricao, descricaoCompleta: n.descricaoCompleta }, n.codigo);
@@ -30,5 +33,10 @@ export class Bm25Baseline {
 
   buscar(consulta: string, k: number): string[] {
     return this.motor.search(consulta, k).map(([codigo]) => codigo);
+  }
+
+  /** Adapter da porta BuscaLexica, usada pelo pipeline na busca híbrida. */
+  comoBuscaLexica(): BuscaLexica {
+    return { buscar: (texto, k) => this.buscar(texto, k).map((c) => this.porCodigo.get(c)!) };
   }
 }
