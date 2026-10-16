@@ -21,7 +21,7 @@ function montar(parcial: Partial<Container> = {}) {
   const classificar = vi.fn(async () => resultado);
   const container: Container = {
     classificar,
-    info: { modeloEmbedding: "m", reranker: "claude-opus-5", armazenamento: "arquivo" },
+    info: { modeloEmbedding: "m", reranker: "claude-opus-5", armazenamento: "arquivo", busca: "hibrida" },
     llmDisponivel: true,
     fechar: async () => {},
     ...parcial,
@@ -36,7 +36,7 @@ describe("API", () => {
     const { app } = montar();
     const r = await app.inject({ method: "GET", url: "/health" });
     expect(r.statusCode).toBe(200);
-    expect(r.json()).toEqual({ status: "ok", modeloEmbedding: "m", reranker: "claude-opus-5", armazenamento: "arquivo" });
+    expect(r.json()).toEqual({ status: "ok", modeloEmbedding: "m", reranker: "claude-opus-5", armazenamento: "arquivo", busca: "hibrida" });
   });
 
   it("POST /classificar com defaults (modo vetorial+llm, k=10)", async () => {

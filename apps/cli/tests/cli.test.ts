@@ -22,7 +22,7 @@ function montar(llmDisponivel = true, resultado: ResultadoClassificacao = result
   const saida: string[] = [];
   const classificar = vi.fn(async () => ({ ...resultado, cache: false }));
   const fechar = vi.fn(async () => {});
-  const container: Container = { classificar, llmDisponivel, fechar, info: { modeloEmbedding: "e5", reranker: "x", armazenamento: "arquivo" } };
+  const container: Container = { classificar, llmDisponivel, fechar, info: { modeloEmbedding: "e5", reranker: "x", armazenamento: "arquivo", busca: "hibrida" } };
   const executarScript = vi.fn(() => 0);
   const programa = criarPrograma({ criarContainer: async () => container, escrever: (t) => saida.push(t), executarScript });
   for (const c of [programa, ...programa.commands]) c.exitOverride().configureOutput({ writeErr: () => {}, writeOut: () => {} });

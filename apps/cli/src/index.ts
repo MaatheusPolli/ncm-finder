@@ -1,7 +1,9 @@
 #!/usr/bin/env -S npx tsx
 import { join } from "node:path";
-import { criarContainer } from "@ncm-finder/core";
+import { carregarEnv, criarContainer } from "@ncm-finder/core";
 import { criarPrograma, executarScriptTsx, RAIZ } from "./program.js";
+
+carregarEnv(join(RAIZ, ".env"));
 
 const programa = criarPrograma({
   criarContainer: () => criarContainer(process.env.DATA_DIR ?? join(RAIZ, "data")),
