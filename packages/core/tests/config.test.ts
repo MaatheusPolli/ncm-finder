@@ -10,7 +10,9 @@ describe("criarEmbeddingProvider", () => {
 
   it("cai para local sem chave", () => {
     expect(criarEmbeddingProvider({})).toBeInstanceOf(LocalTransformersProvider);
-    expect(criarEmbeddingProvider({ EMBEDDING_PROVIDER: "local", LOCAL_EMBEDDING_MODEL: "x/y" }).modelo).toBe("x/y");
+    expect(criarEmbeddingProvider({}).modelo).toBe("Xenova/bge-m3");
+    expect(criarEmbeddingProvider({ EMBEDDING_PROVIDER: "local", LOCAL_EMBEDDING_MODEL: "Xenova/bge-m3" }).dimensao).toBe(1024);
+    expect(() => criarEmbeddingProvider({ EMBEDDING_PROVIDER: "local", LOCAL_EMBEDDING_MODEL: "x/y" })).toThrow(/sem perfil conhecido/);
   });
 
   it("valida o tipo e a chave", () => {

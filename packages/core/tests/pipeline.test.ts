@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   criarClassificador,
+  fundirCandidatos,
+  PROFUNDIDADE_FUSAO,
   hashEntrada,
   LocalTransformersProvider,
   MemoryCache,
@@ -148,6 +150,30 @@ describe("classificar", () => {
     expect(embed).toHaveBeenCalledTimes(1);
   });
 
+  it("busca híbrida: traz candidato que só o BM25 achou e não compartilha cache com a vetorial", async () => {
+    const vetores = await montarStore();
+    const soLexico = ncm("22030000", "Cerveja de malte");
+    const lexica = { buscar: vi.fn(() => [soLexico]) };
+    const cache = new MemoryCache();
+    const hibrido = criarClassificador({ embeddings: fakeEmbeddings, vetores, reranker: new NoopReranker(), cache, lexica });
+    const r = await hibrido({ descricao: "mel natural" }, { modo: "vetorial", k: 3 });
+    expect(r.candidatos.map((c) => c.ncm.codigo)).toContain("22030000");
+    expect(r.candidatos.find((c) => c.ncm.codigo === "22030000")!.score).toBe(0);
+    expect(r.candidatos[0]!.ncm.codigo).toBe("04090000");
+    expect(lexica.buscar).toHaveBeenCalledWith("mel natural", PROFUNDIDADE_FUSAO);
+
+    const soVetorial = criarClassificador({ embeddings: fakeEmbeddings, vetores, reranker: new NoopReranker(), cache });
+    const v = await soVetorial({ descricao: "mel natural" }, { modo: "vetorial", k: 3 });
+    expect(v.cache).toBe(false);
+    expect(v.candidatos.map((c) => c.ncm.codigo)).not.toContain("22030000");
+  });
+
+  it("fundirCandidatos mantém o cosseno de quem veio da vetorial", () => {
+    const a = { ncm: ncm("11111111", "a"), score: 0.9 };
+    const b = ncm("22222222", "b");
+    expect(fundirCandidatos([a], [b, a.ncm], 5)).toEqual([a, { ncm: b, score: 0 }]);
+  });
+
   it("valida a entrada", async () => {
     const classificar = criarClassificador({ embeddings: fakeEmbeddings, vetores: new MemoryVectorStore(), reranker: new NoopReranker() });
     await expect(classificar({ descricao: "" })).rejects.toThrow();
@@ -156,7 +182,7 @@ describe("classificar", () => {
 
 describe("LocalTransformersProvider", () => {
   it("aplica prefixos e5, carrega o modelo uma vez e devolve listas", async () => {
-    const extrator = vi.fn(async (textos: string[]) => ({ tolist: () => textos.map((t) => [t.length]) }));
+    const extrator = vi.fn(async (textos: string[], _opcoes?: unknown) => ({ tolist: () => textos.map((t) => [t.length]) }));
     const carregar = vi.fn(async () => extrator);
     const p = new LocalTransformersProvider({ carregar });
     expect(p.modelo).toBe("Xenova/multilingual-e5-small");
@@ -166,5 +192,19 @@ describe("LocalTransformersProvider", () => {
     expect(extrator.mock.calls[1]![0]).toEqual(["passage: ab"]);
     expect(carregar).toHaveBeenCalledTimes(1);
     expect(await p.embed([], "query")).toEqual([]);
+    expect(extrator.mock.calls[0]![1]).toEqual({ pooling: "mean", normalize: true });
+  });
+
+  it("bge-m3: CLS pooling e sem prefixos; perfil customizado para modelo desconhecido", async () => {
+    const extrator = vi.fn(async (textos: string[]) => ({ tolist: () => textos.map(() => [0]) }));
+    const bge = new LocalTransformersProvider({ modelo: "Xenova/bge-m3", carregar: async () => extrator });
+    expect(bge.dimensao).toBe(1024);
+    await bge.embed(["tênis"], "query");
+    expect(extrator).toHaveBeenCalledWith(["tênis"], { pooling: "cls", normalize: true });
+
+    const custom = new LocalTransformersProvider({
+      modelo: "org/x", perfil: { dimensao: 8, pooling: "mean", prefixoConsulta: "q ", prefixoDocumento: "d " }, carregar: async () => extrator,
+    });
+    expect(custom.dimensao).toBe(8);
   });
 });
