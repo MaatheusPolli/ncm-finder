@@ -21,7 +21,7 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
   private readonly url: string;
   private readonly fetch: typeof fetch;
 
-  constructor({ apiKey, modelo = "voyage-3", dimensao = 1024, url = "https://api.voyageai.com/v1/embeddings", fetch: f = fetch }: OpcoesVoyage) {
+  constructor({ apiKey, modelo = "voyage-3", dimensao = 1024, url = "https://api.voyageai.com/v1/embeddings", fetch: f = (url, init) => globalThis.fetch(url, init) }: OpcoesVoyage) {
     if (!apiKey) throw new Error("VOYAGE_API_KEY não configurada");
     this.apiKey = apiKey;
     this.modelo = modelo;

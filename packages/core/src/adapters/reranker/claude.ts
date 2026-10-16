@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { EscolhaLlmSchema, type Candidato, type EntradaClassificacao, type EscolhaLlm } from "../../domain/classificacao.js";
 import type { Reranker } from "../../ports/reranker.js";
+import { validarEscolha, type MotivoFallback } from "./validar-escolha.js";
 import { montarMensagemRerank, NOME_TOOL, SYSTEM_RERANK, TOOL_ESCOLHER_NCM } from "../../pipeline/prompts/rerank.js";
 
 type Esforco = "low" | "medium" | "high" | "xhigh" | "max";
@@ -10,7 +11,7 @@ export interface ClienteClaude {
   beta: { messages: { create(params: Anthropic.Beta.MessageCreateParamsNonStreaming): Promise<Anthropic.Beta.BetaMessage> } };
 }
 
-export type MotivoFallback = "sem_tool_use" | "schema_invalido" | "fora_dos_candidatos" | "recusa";
+export type { MotivoFallback };
 
 export interface OpcoesClaudeReranker {
   cliente: ClienteClaude;
@@ -74,21 +75,6 @@ export class ClaudeReranker implements Reranker {
       return null;
     }
 
-    const validos = new Set(candidatos.map((c) => c.ncm.codigo));
-    const escolha = parse.data;
-    const alternativas = escolha.alternativas.filter((a) => validos.has(a) && a !== escolha.ncm).slice(0, 3);
-
-    if (validos.has(escolha.ncm)) return { ...escolha, alternativas };
-
-    // Código inventado: aproveita a melhor alternativa válida, com confiança reduzida.
-    this.aoDescartar("fora_dos_candidatos", escolha.ncm);
-    const [primeira, ...resto] = alternativas;
-    if (!primeira) return null;
-    return {
-      ncm: primeira,
-      confianca: Math.min(escolha.confianca, 0.3),
-      justificativa: `O modelo sugeriu ${escolha.ncm}, que não está entre os candidatos; usada a alternativa válida mais provável. ${escolha.justificativa}`,
-      alternativas: resto,
-    };
+    return validarEscolha(parse.data, candidatos, this.aoDescartar);
   }
 }

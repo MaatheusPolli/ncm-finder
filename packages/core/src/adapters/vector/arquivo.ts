@@ -17,5 +17,5 @@ export async function carregarStoreDeArquivos(arquivoNcm: string, arquivoEmbeddi
   });
   const store = new MemoryVectorStore();
   await store.upsert(emb.modelo, itens);
-  return { store, modelo: emb.modelo, total: itens.length };
+  return { store, ncms, modelo: emb.modelo, total: itens.length };
 }
