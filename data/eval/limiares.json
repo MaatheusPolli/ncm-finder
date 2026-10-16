@@ -1,6 +1,6 @@
 {
-  "_comentario": "Top-5 mínimo no subconjunto de regressão (50 produtos, 1 a cada 6). Medido em 2026-09-24 com Xenova/multilingual-e5-small; margem de 1 produto (2 p.p.). Atualize ao melhorar o sistema.",
+  "_comentario": "Top-5 mínimo no subconjunto de regressão (50 produtos, 1 a cada 6). Medido em 2026-09-28 com dataset v2 (revisão de rótulos), Xenova/bge-m3 e busca híbrida (RRF c=10, profundidade 50); margem de 1 produto (2 p.p.). Atualize ao melhorar o sistema.",
   "BM25": { "top5": 0.46 },
-  "Vetorial": { "top5": 0.36 },
-  "Híbrido (RRF)": { "top5": 0.50 }
+  "Vetorial": { "top5": 0.44 },
+  "Híbrido (RRF)": { "top5": 0.56 }
 }

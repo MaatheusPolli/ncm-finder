@@ -4,7 +4,7 @@ id,descricao,ncm
 3,Frango inteiro congelado sem miúdos,02071220
 4,Picanha bovina resfriada embalada a vácuo,02013000
 5,Carne moída bovina congelada 500g,02023000
-6,Costelinha suína congelada temperada,02032900
+6,Costelinha suína congelada temperada,16024900
 7,Bacon em manta defumado,02101200
 8,Salmão do Atlântico fresco inteiro refrigerado,03021400
 9,Filé de tilápia congelado 800g,03046100
@@ -25,13 +25,13 @@ id,descricao,ncm
 24,Alface crespa hidropônica,07051900
 25,Cenoura fresca kg,07061000
 26,Pepino japonês fresco,07070000
-27,Feijão carioca tipo 1 pacote 1kg,07133319
+27,Feijão carioca tipo 1 pacote 1kg,07133399
 28,Banana prata kg,08039000
 29,Maçã gala nacional kg,08081000
 30,Uva thompson verde sem semente bandeja 500g,08061000
 31,Laranja pera para suco kg,08051000
 32,Limão tahiti kg,08055000
-33,Castanha de caju torrada e salgada 200g,08013200
+33,Castanha de caju torrada e salgada 200g,20081900
 34,Castanha-do-pará sem casca 100g,08012200
 35,Uva passa escura 200g,08062000
 36,Abacate manteiga unidade,08044000
@@ -61,19 +61,19 @@ id,descricao,ncm
 60,Chiclete goma de mascar sem açúcar,17041000
 61,Chocolate ao leite barra 100g,18063210
 62,Cacau em pó 100% sem açúcar 200g,18050000
-63,Achocolatado em pó 400g,18069000
+63,Achocolatado em pó 400g,18061000
 64,Macarrão espaguete sem ovos 500g,19021900
 65,Macarrão instantâneo sabor galinha 85g,19023000
 66,Biscoito cream cracker 400g,19059020
 67,Biscoito recheado sabor chocolate 130g,19053100
-68,Pão de forma tradicional 500g,19059090
+68,Pão de forma tradicional 500g,19059010
 69,Cereal matinal flocos de milho 300g,19041000
 70,Extrato de tomate lata 340g,20029000
 71,Milho verde em conserva lata 200g,20058000
 72,Ervilha em conserva lata 200g,20054000
 73,Azeitona verde em conserva vidro 200g,20057000
-74,Geleia de morango vidro 320g,20079990
-75,Suco de laranja integral garrafa 1 litro,20091900
+74,Geleia de morango vidro 320g,20079910
+75,Suco de laranja integral garrafa 1 litro,20091200
 76,Ketchup tradicional 400g,21032010
 77,Maionese pote 500g,21039011
 78,Molho de soja shoyu 150ml,21031010
@@ -93,7 +93,7 @@ id,descricao,ncm
 92,Cigarro com filtro maço com 20 unidades,24022000
 93,Sal refinado iodado pacote 1kg,25010020
 94,Cimento portland CP II saco 50kg,25232910
-95,Cal hidratada para construção saco 20kg,25223000
+95,Cal hidratada para construção saco 20kg,25222000
 96,Óleo diesel S10,27101921
 97,Gás liquefeito de petróleo botijão 13kg,27111910
 98,Óleo lubrificante para motor de carro 1 litro,27101932
@@ -105,7 +105,7 @@ id,descricao,ncm
 104,Esmalte para unhas vermelho 8ml,33043000
 105,Batom matte vermelho,33041000
 106,Perfume feminino eau de parfum 100ml,33030010
-107,Protetor solar FPS 50 loção 200ml,33049910
+107,Protetor solar FPS 50 loção 200ml,33049990
 108,Hidratante corporal loção 400ml,33049910
 109,Shampoo para cabelos cacheados 400ml,33051000
 110,Condicionador hidratante 400ml,33059000
@@ -158,9 +158,9 @@ id,descricao,ncm
 157,Cueca boxer de malha de algodão,61071100
 158,Sutiã de renda com bojo,62121000
 159,Pijama feminino de malha de algodão,61083100
-160,Boné de algodão com aba curva,65050090
+160,Boné de algodão com aba curva,65050011
 161,Toalha de banho felpuda de algodão,63026000
-162,Lençol de casal de algodão 200 fios,63022100
+162,Lençol de casal de algodão 200 fios,63023100
 163,Cobertor de microfibra de poliéster casal,63014000
 164,Cortina de poliéster para sala,63039200
 165,Pano de chão de algodão,63071000
@@ -176,7 +176,7 @@ id,descricao,ncm
 175,Chapéu de palha,65040090
 176,Porcelanato polido 60x60 caixa,69072100
 177,Vaso sanitário de louça com caixa acoplada,69101000
-178,Telha cerâmica colonial,69059000
+178,Telha cerâmica colonial,69051000
 179,Tijolo cerâmico 8 furos,69041000
 180,Caneca de cerâmica 300ml,69120000
 181,Espelho de parede com moldura de madeira,70099200
@@ -186,9 +186,9 @@ id,descricao,ncm
 185,Vergalhão de aço CA-50 10mm barra 12m,72142000
 186,Arame farpado rolo 500m,73130000
 187,Parafuso de aço sextavado,73181500
-188,Pia de cozinha de aço inox,73249000
+188,Pia de cozinha de aço inox,73241000
 189,Fogão a gás 4 bocas,73211100
-190,Faca de cozinha de aço inox,82119100
+190,Faca de cozinha de aço inox,82119210
 191,Tesoura de uso geral,82130000
 192,Martelo de unha,82052000
 193,Chave de fenda,82054000
@@ -199,7 +199,7 @@ id,descricao,ncm
 198,Geladeira frost free duplex 400 litros,84181000
 199,Freezer horizontal 1 porta 300 litros,84183000
 200,Ar condicionado split 12000 BTU,84151011
-201,Máquina de lavar roupa 12kg,84501100
+201,Máquina de lavar roupa 12kg,84502020
 202,Lava-louças 8 serviços,84221100
 203,Aspirador de pó 1200W,85081100
 204,Ferro de passar roupa a vapor,85164000
@@ -218,19 +218,19 @@ id,descricao,ncm
 217,Barbeador elétrico recarregável,85101000
 218,Console de videogame,95045000
 219,Bicicleta aro 29 mountain bike,87120010
-220,Pastilha de freio dianteira para carro,87083090
+220,Pastilha de freio dianteira para carro,87083019
 221,Carrinho de bebê,87150000
 222,Óculos de sol com proteção UV,90041000
 223,Armação de óculos de grau de acetato,90031100
 224,Lente de contato gelatinosa,90013000
 225,Termômetro clínico digital,90251990
 226,Violão acústico de nylon,92029000
-227,Teclado musical eletrônico 61 teclas,92071010
+227,Teclado musical eletrônico 61 teclas,92071090
 228,Sofá 3 lugares estofado,94016100
 229,Colchão de espuma casal,94042100
 230,Travesseiro de fibra siliconada,94049000
 231,Mesa de jantar de madeira 6 lugares,94036000
-232,Guarda-roupa de MDF 6 portas,94036000
+232,Guarda-roupa de MDF 6 portas,94035000
 233,Bola de futebol de campo,95066200
 234,Bicicleta ergométrica,95069100
 235,Vara de pesca de fibra de carbono,95071000
@@ -244,16 +244,16 @@ id,descricao,ncm
 243,Vassoura de piaçava,96031000
 244,Botão de plástico para roupa,96062100
 245,Cebola roxa kg,07031019
-246,Salmão congelado em postas,03048100
+246,Salmão congelado em postas,03031300
 247,Leite condensado lata 395g,04029900
 248,Requeijão cremoso copo 200g,04061090
-249,Farinha de milho flocada 500g,11022000
+249,Farinha de milho flocada 500g,11041900
 250,Tapioca goma de mandioca hidratada 500g,11081400
 251,Alho descascado congelado,07108000
 252,Batata frita pré-frita congelada 2kg,20041000
-253,Pipoca de micro-ondas 100g,10059010
+253,Pipoca de micro-ondas 100g,20089900
 254,Refrigerante guaraná garrafa 2 litros,22021000
-255,Água de coco integral 1 litro,20098990
+255,Água de coco integral 1 litro,20098921
 256,Espumante brut 750ml,22041010
 257,Queijo prato fatiado 150g,04069020
 258,Amaciante de roupas 2 litros,38099190
@@ -272,30 +272,30 @@ id,descricao,ncm
 271,Carpete de nylon rolo,57032900
 272,Luva de algodão para jardinagem,61169200
 273,Gravata de seda,62151000
-274,Lenço de pescoço de viscose,62143000
+274,Lenço de pescoço de viscose,62144000
 275,Blazer feminino de poliéster,62043300
 276,Maiô de natação de poliamida,61124100
 277,Sunga masculina de poliamida,61123100
 278,Meia-calça feminina de poliamida,61152100
-279,Parafusadeira a bateria,84672100
-280,Balança digital de cozinha,84238110
+279,Parafusadeira a bateria,84672992
+280,Balança digital de cozinha,84238190
 281,Calculadora de bolso,84701000
 282,Relógio de parede,91052100
-283,Cadeira de madeira para cozinha,94016100
+283,Cadeira de madeira para cozinha,94016900
 284,Luminária pendente de metal para teto,94051190
 285,Tábua de passar roupa de aço,73239900
 286,Grelha de churrasco de aço inox,73239300
 287,Panela de pressão de alumínio 4.5 litros,76151000
-288,Papel alumínio rolo 30cm x 7.5m,76071990
+288,Papel alumínio rolo 30cm x 7.5m,76071190
 289,Escada de alumínio 5 degraus,76169900
 290,Lixa d'água para madeira,68052000
 291,Disco de corte para esmerilhadeira,68042211
 292,Esponja de aço para limpeza,73231000
 293,Pregos de aço 17x21 kg,73170090
 294,Corrente de aço para cachorro,73158900
-295,Cabide de plástico,39264000
+295,Cabide de plástico,39269090
 296,Cadeira de plástico monobloco empilhável,94018000
-297,Brinquedo quebra-cabeça 500 peças,95030099
-298,Boneca de vinil,95030099
+297,Brinquedo quebra-cabeça 500 peças,95030070
+298,Boneca de vinil,95030022
 299,Árvore de natal artificial 1.80m,95051000
-300,Carrinho de controle remoto,95030099
+300,Carrinho de controle remoto,95030097
